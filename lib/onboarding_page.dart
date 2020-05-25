@@ -130,24 +130,44 @@ class _OnBoardingPageState extends State<OnBoardingPage> {
                   TextColumn(
                     item: item,
                   ),
-                  Spacer(),
+                ],
+              )),
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: Container(
+              margin: EdgeInsets.only(bottom: kPaddingL + kPaddingM),
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
                   CurrentPageIndicator(
                     page: index + 1,
                     total: items.length,
-                    child: NextButton(onTap: () {
+                    child: Container(
+                      height: 68,
+                      width: 68,
+                    ),
+                  ),
+                  NextButton(
+                    onNext: () {
                       if (index < items.length - 1) {
                         setState(() {
                           index += 1;
                         });
-                      } else {
-                        setState(() {
-                          index = 0;
-                        });
                       }
-                    }),
-                  ),
+                    },
+                    onFinish: () {
+                      //TODO Push login
+                    },
+                    isFinished: () {
+                      return item == items.last;
+                    },
+                  )
                 ],
-              )),
+              ),
+            ),
+          )
         ],
       ),
     );
@@ -613,30 +633,92 @@ class DarkCard extends StatelessWidget {
   }
 }
 
-class NextButton extends StatelessWidget {
-  final VoidCallback onTap;
+class NextButton extends StatefulWidget {
+  final VoidCallback onFinish;
+  final VoidCallback onNext;
+  final bool Function() isFinished;
 
-  const NextButton({Key key, this.onTap}) : super(key: key);
+  const NextButton({Key key, this.onNext, this.onFinish, this.isFinished})
+      : super(key: key);
+
+  @override
+  _NextButtonState createState() => _NextButtonState();
+}
+
+class _NextButtonState extends State<NextButton>
+    with SingleTickerProviderStateMixin {
+  AnimationController _controller;
+
+  @override
+  void initState() {
+    _controller =
+        AnimationController(vsync: this, duration: Duration(milliseconds: 500));
+    _controller.addStatusListener((status) {
+      if (status == AnimationStatus.completed) {
+        widget.onFinish();
+      }
+    });
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        height: 68,
-        width: 68,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: Colors.white,
-        ),
-        alignment: Alignment.center,
-        child: Icon(
-          Icons.arrow_forward,
-          color: kBlue,
-          size: 24,
-        ),
-      ),
+    final circleSizeTween =
+        Tween<double>(begin: 68, end: MediaQuery.of(context).size.height * 2);
+
+    final iconSizeTween = Tween<double>(begin: 24, end: 32);
+    final iconOpacityTween = Tween<double>(begin: 1.0, end: 0.0);
+
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        return GestureDetector(
+          onTap: handleOnTap,
+          child: CustomPaint(
+            painter:
+                RippleCirclePainter(circleSizeTween.evaluate(CurvedAnimation(
+              parent: _controller,
+              curve: Curves.easeInCubic,
+            ))),
+            child: Opacity(
+              opacity: iconOpacityTween.evaluate(CurvedAnimation(
+                  parent: _controller, curve: Interval(0.6, 1.0))),
+              child: Icon(
+                Icons.arrow_forward,
+                color: kBlue,
+                size: iconSizeTween.evaluate(CurvedAnimation(
+                    parent: _controller, curve: Interval(0.6, 1.0))),
+              ),
+            ),
+          ),
+        );
+      },
     );
+  }
+
+  void handleOnTap() {
+    if (widget.isFinished()) {
+      _controller.forward(from: 0.0);
+    } else {
+      widget.onNext();
+    }
+  }
+}
+
+class RippleCirclePainter extends CustomPainter {
+  final double circleSize;
+
+  RippleCirclePainter(this.circleSize);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    canvas.drawCircle(size.center(Offset.zero), circleSize / 2,
+        Paint()..color = Colors.white);
+  }
+
+  @override
+  bool shouldRepaint(CustomPainter oldDelegate) {
+    return true;
   }
 }
 
