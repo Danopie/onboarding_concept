@@ -8,41 +8,6 @@ class OnBoardingPage extends StatefulWidget {
   _OnBoardingPageState createState() => _OnBoardingPageState();
 }
 
-class BoardingItem {
-  final String header;
-  final String description;
-  final List<Widget> lightCardIcons;
-  final Widget darkCardWidget;
-  final bool isLightCardTop;
-
-  const BoardingItem({
-    @required this.header,
-    @required this.description,
-    @required this.lightCardIcons,
-    @required this.darkCardWidget,
-    @required this.isLightCardTop,
-  });
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is BoardingItem &&
-          runtimeType == other.runtimeType &&
-          header == other.header &&
-          description == other.description &&
-          lightCardIcons == other.lightCardIcons &&
-          darkCardWidget == other.darkCardWidget &&
-          isLightCardTop == other.isLightCardTop;
-
-  @override
-  int get hashCode =>
-      header.hashCode ^
-      description.hashCode ^
-      lightCardIcons.hashCode ^
-      darkCardWidget.hashCode ^
-      isLightCardTop.hashCode;
-}
-
 class _OnBoardingPageState extends State<OnBoardingPage> {
   static final items = [
     BoardingItem(
@@ -111,43 +76,117 @@ class _OnBoardingPageState extends State<OnBoardingPage> {
     var item = items[index];
     return Scaffold(
       backgroundColor: kBlue,
-      body: Container(
-          margin: EdgeInsets.symmetric(
-            vertical: kPaddingL + kPaddingM,
-            horizontal: kPaddingL,
+      body: Stack(
+        children: [
+          Positioned(
+            right: 0,
+            top: 0,
+            child: DotGrid(
+              verticalCount: 5,
+              horizontalCount: 5,
+            ),
           ),
-          child: Column(
-            children: <Widget>[
-              Header(),
-              Container(
-                height: kPaddingL,
+          Positioned(
+            left: 0,
+            top: MediaQuery.of(context).size.height * 1 / 4,
+            child: DotGrid(
+              verticalCount: 10,
+              horizontalCount: 5,
+            ),
+          ),
+          Positioned(
+            left: 0,
+            bottom: kPaddingM,
+            child: DotGrid(
+              verticalCount: 10,
+              horizontalCount: 5,
+            ),
+          ),
+          Positioned(
+            right: 0,
+            top: MediaQuery.of(context).size.height * 2 / 3,
+            child: DotGrid(
+              verticalCount: 10,
+              horizontalCount: 5,
+            ),
+          ),
+          Container(
+              margin: EdgeInsets.symmetric(
+                vertical: kPaddingL + kPaddingM,
+                horizontal: kPaddingL,
               ),
-              CardStack(
-                item: item,
-              ),
-              Container(
-                height: kPaddingL,
-              ),
-              TextColumn(
-                header: item.header,
-                description: item.description,
-              ),
-              Spacer(),
-              CurrentPageIndicator(
-                page: index + 1,
-                total: items.length,
-                child: NextButton(onTap: () {
-                  if (index < items.length - 1) {
-                    setState(() {
-                      index += 1;
-                    });
-                  }
-                }),
-              ),
-            ],
-          )),
+              child: Column(
+                children: <Widget>[
+                  Header(),
+                  Container(
+                    height: kPaddingL,
+                  ),
+                  CardStack(
+                    item: item,
+                  ),
+                  Container(
+                    height: kPaddingL,
+                  ),
+                  TextColumn(
+                    item: item,
+                  ),
+                  Spacer(),
+                  CurrentPageIndicator(
+                    page: index + 1,
+                    total: items.length,
+                    child: NextButton(onTap: () {
+                      if (index < items.length - 1) {
+                        setState(() {
+                          index += 1;
+                        });
+                      } else {
+                        setState(() {
+                          index = 0;
+                        });
+                      }
+                    }),
+                  ),
+                ],
+              )),
+        ],
+      ),
     );
   }
+}
+
+class BoardingItem {
+  final String header;
+  final String description;
+  final List<Widget> lightCardIcons;
+  final Widget darkCardWidget;
+  final bool isLightCardTop;
+
+  const BoardingItem({
+    @required this.header,
+    @required this.description,
+    @required this.lightCardIcons,
+    @required this.darkCardWidget,
+    @required this.isLightCardTop,
+  });
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is BoardingItem &&
+          runtimeType == other.runtimeType &&
+          header == other.header &&
+          description == other.description &&
+          lightCardIcons == other.lightCardIcons &&
+          darkCardWidget == other.darkCardWidget &&
+          isLightCardTop == other.isLightCardTop;
+
+  @override
+  int get hashCode =>
+      header.hashCode ^
+      description.hashCode ^
+      lightCardIcons.hashCode ^
+      darkCardWidget.hashCode ^
+      isLightCardTop.hashCode;
 }
 
 class CommunityCard extends StatelessWidget {
@@ -175,7 +214,7 @@ class CommunityCard extends StatelessWidget {
           ),
         Icon(iconData, color: Colors.white.withOpacity(0.8), size: 38),
         Container(
-          height: 16,
+          height: 12,
         ),
         Expanded(
           child: CustomPaint(
@@ -222,7 +261,7 @@ class VerticalDashedContainer extends CustomPainter {
   }
 }
 
-class CurrentPageIndicator extends StatelessWidget {
+class CurrentPageIndicator extends StatefulWidget {
   final int page;
   final int total;
   final Widget child;
@@ -231,12 +270,37 @@ class CurrentPageIndicator extends StatelessWidget {
       : super(key: key);
 
   @override
+  _CurrentPageIndicatorState createState() => _CurrentPageIndicatorState();
+}
+
+class _CurrentPageIndicatorState extends State<CurrentPageIndicator>
+    with SingleTickerProviderStateMixin {
+  AnimationController _controller;
+
+  @override
+  void initState() {
+    _controller = AnimationController(
+        vsync: this, duration: Duration(milliseconds: 500), value: 1.0);
+
+    super.initState();
+  }
+
+  @override
+  void didUpdateWidget(CurrentPageIndicator oldWidget) {
+    if (oldWidget.page != widget.page) {
+      _controller.forward(from: 0.0);
+    }
+    super.didUpdateWidget(oldWidget);
+  }
+
+  @override
   Widget build(BuildContext context) {
     return CustomPaint(
-      painter: IndicatorPainter(total, page),
+      painter: IndicatorPainter(widget.total, widget.page,
+          CurvedAnimation(parent: _controller, curve: Curves.decelerate)),
       child: Container(
         margin: EdgeInsets.all(12),
-        child: child,
+        child: widget.child,
       ),
     );
   }
@@ -245,8 +309,13 @@ class CurrentPageIndicator extends StatelessWidget {
 class IndicatorPainter extends CustomPainter {
   final int pageCount;
   final int currentPage;
+  final Animation<double> loopAnimation;
 
-  IndicatorPainter(this.pageCount, this.currentPage);
+  final currentPageColorTween =
+      ColorTween(begin: Colors.white.withOpacity(0.4), end: Colors.white);
+
+  IndicatorPainter(this.pageCount, this.currentPage, this.loopAnimation)
+      : super(repaint: loopAnimation);
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -256,7 +325,7 @@ class IndicatorPainter extends CustomPainter {
         center: center, width: size.width - 12, height: size.height - 12);
 
     final currentPagePaint = Paint()
-      ..color = Colors.white
+      ..color = currentPageColorTween.evaluate(loopAnimation)
       ..strokeWidth = 4
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
@@ -267,12 +336,84 @@ class IndicatorPainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
 
+    final offsetAngle =
+        Tween<double>(begin: 0, end: pi * 2).evaluate(loopAnimation) *
+            (currentPage % 2 == 0 ? -1 : 1);
     final spaceAngle = pi / 12;
     final sweepAngle = ((pi - ((pageCount - 1) * spaceAngle)) / pageCount);
 
     for (int i = 0; i < pageCount; i++) {
-      canvas.drawArc(rect, pi + sweepAngle * i + spaceAngle * i, sweepAngle,
-          false, i <= currentPage - 1 ? currentPagePaint : otherPagePaint);
+      canvas.drawArc(
+          rect,
+          pi + sweepAngle * i + spaceAngle * i + offsetAngle,
+          sweepAngle,
+          false,
+          i <= currentPage - 1 ? currentPagePaint : otherPagePaint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(CustomPainter oldDelegate) {
+    return true;
+  }
+}
+
+class DotGrid extends StatelessWidget {
+  final int horizontalCount;
+  final int verticalCount;
+
+  const DotGrid({
+    Key key,
+    this.horizontalCount,
+    this.verticalCount,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final dotSize = 2.5;
+    final spaceSize = 8.0;
+    final width =
+        (horizontalCount * dotSize) + ((horizontalCount - 1) * spaceSize);
+    final height =
+        (verticalCount * dotSize) + ((verticalCount - 1) * spaceSize);
+    return CustomPaint(
+      painter: DotGridPainter(
+        horizontalCount,
+        verticalCount,
+        kWhite.withOpacity(0.1),
+        dotSize,
+        spaceSize,
+      ),
+      child: Container(
+        width: width,
+        height: height,
+      ),
+    );
+  }
+}
+
+class DotGridPainter extends CustomPainter {
+  final int horizontalCount;
+  final int verticalCount;
+  final Color color;
+  final double dotSize;
+  final double spaceSize;
+
+  DotGridPainter(this.horizontalCount, this.verticalCount, this.color,
+      this.dotSize, this.spaceSize);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    for (int i = 0; i < horizontalCount; i++) {
+      for (int j = 0; j < verticalCount; j++) {
+        canvas.drawCircle(
+            Offset(
+              (spaceSize + dotSize) * i,
+              (dotSize + spaceSize) * j,
+            ),
+            dotSize.toDouble(),
+            Paint()..color = color);
+      }
     }
   }
 
@@ -335,8 +476,8 @@ class _CardStackState extends State<CardStack>
 
   @override
   void initState() {
-    _controller =
-        AnimationController(vsync: this, duration: Duration(milliseconds: 750));
+    _controller = AnimationController(
+        vsync: this, duration: Duration(milliseconds: 1000));
     oldItem = widget.item;
     super.initState();
   }
@@ -360,24 +501,22 @@ class _CardStackState extends State<CardStack>
             position: Tween<Offset>(begin: Offset.zero, end: Offset(-2, 0))
                 .animate(CurvedAnimation(
                     parent: _controller,
-                    curve: Interval(0.2, 1.0, curve: Curves.decelerate))),
+                    curve: Interval(0.1, 1.0, curve: Curves.decelerate))),
             child: DarkCard(
               darkCardWidget: oldItem.darkCardWidget,
               isTop: oldItem.isLightCardTop,
             ),
           ),
-
           SlideTransition(
             position: Tween<Offset>(begin: Offset(2, 0), end: Offset.zero)
                 .animate(CurvedAnimation(
               parent: _controller,
-              curve: Interval(0.2, 1.0, curve: Curves.decelerate),
+              curve: Curves.decelerate,
             )),
             child: DarkCard(
                 darkCardWidget: widget.item.darkCardWidget,
                 isTop: widget.item.isLightCardTop),
           ),
-
           Positioned(
             top: oldItem.isLightCardTop ? 0 : null,
             bottom: oldItem.isLightCardTop ? null : 0,
@@ -390,7 +529,6 @@ class _CardStackState extends State<CardStack>
               child: LightCard(lightCardIcons: oldItem.lightCardIcons),
             ),
           ),
-
           Positioned(
             top: widget.item.isLightCardTop ? 0 : null,
             bottom: widget.item.isLightCardTop ? null : 0,
@@ -399,7 +537,8 @@ class _CardStackState extends State<CardStack>
             child: SlideTransition(
               position: Tween<Offset>(begin: Offset(2, 0), end: Offset.zero)
                   .animate(CurvedAnimation(
-                      parent: _controller, curve: Curves.decelerate)),
+                      parent: _controller,
+                      curve: Interval(0.2, 1.0, curve: Curves.decelerate))),
               child: LightCard(lightCardIcons: widget.item.lightCardIcons),
             ),
           )
@@ -501,37 +640,80 @@ class NextButton extends StatelessWidget {
   }
 }
 
-class TextColumn extends StatelessWidget {
-  final String header;
+class TextColumn extends StatefulWidget {
+  final BoardingItem item;
 
-  final String description;
+  const TextColumn({Key key, this.item}) : super(key: key);
 
-  const TextColumn({Key key, this.header, this.description}) : super(key: key);
+  @override
+  _TextColumnState createState() => _TextColumnState();
+}
+
+class _TextColumnState extends State<TextColumn>
+    with SingleTickerProviderStateMixin {
+  BoardingItem oldItem;
+  AnimationController _controller;
+
+  @override
+  void initState() {
+    _controller =
+        AnimationController(vsync: this, duration: Duration(milliseconds: 180));
+    oldItem = widget.item;
+    super.initState();
+  }
+
+  @override
+  void didUpdateWidget(TextColumn oldWidget) {
+    if (oldWidget.item != widget.item) {
+      oldItem = oldWidget.item;
+      _controller.forward(from: 0.0);
+    }
+    super.didUpdateWidget(oldWidget);
+  }
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      child: Column(
+      child: Stack(
         children: <Widget>[
-          Text(
-            header,
-            style: TextStyle(
-                fontWeight: FontWeight.bold, fontSize: 26, color: Colors.white),
-          ),
-          Container(
-            height: kPaddingS,
-          ),
-          Text(
-            description,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-                fontWeight: FontWeight.normal,
-                height: 1.5,
-                fontSize: 16,
-                color: kGrey.withOpacity(0.6)),
-          ),
+          if (oldItem != widget.item)
+            FadeTransition(
+                opacity: Tween<double>(begin: 0.0, end: 1.0).animate(
+                    CurvedAnimation(
+                        parent: _controller, curve: Curves.decelerate)),
+                child: buildItems(widget.item)),
+          FadeTransition(
+              opacity: Tween<double>(begin: 1.0, end: 0.0).animate(
+                  CurvedAnimation(
+                      parent: _controller, curve: Curves.decelerate)),
+              child: buildItems(oldItem))
         ],
       ),
+    );
+  }
+
+  Column buildItems(BoardingItem item) {
+    return Column(
+      key: ObjectKey(item),
+      children: <Widget>[
+        Text(
+          item.header,
+          style: TextStyle(
+              fontWeight: FontWeight.bold, fontSize: 26, color: Colors.white),
+        ),
+        Container(
+          height: kPaddingS,
+        ),
+        Text(
+          item.description,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+              fontWeight: FontWeight.normal,
+              height: 1.5,
+              fontSize: 16,
+              color: kGrey.withOpacity(0.6)),
+        ),
+      ],
     );
   }
 }
