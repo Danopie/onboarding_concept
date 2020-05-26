@@ -663,8 +663,9 @@ class _NextButtonState extends State<NextButton>
 
   @override
   Widget build(BuildContext context) {
+    final initialSize = 68.0;
     final circleSizeTween =
-        Tween<double>(begin: 68, end: MediaQuery.of(context).size.height * 2);
+        Tween<double>(begin: initialSize, end: MediaQuery.of(context).size.height * 2);
 
     final iconSizeTween = Tween<double>(begin: 24, end: 32);
     final iconOpacityTween = Tween<double>(begin: 1.0, end: 0.0);
@@ -683,11 +684,15 @@ class _NextButtonState extends State<NextButton>
             child: Opacity(
               opacity: iconOpacityTween.evaluate(CurvedAnimation(
                   parent: _controller, curve: Interval(0.6, 1.0))),
-              child: Icon(
-                Icons.arrow_forward,
-                color: kBlue,
-                size: iconSizeTween.evaluate(CurvedAnimation(
-                    parent: _controller, curve: Interval(0.6, 1.0))),
+              child: Container(
+                height: initialSize,
+                width: initialSize,
+                child: Icon(
+                  Icons.arrow_forward,
+                  color: kBlue,
+                  size: iconSizeTween.evaluate(CurvedAnimation(
+                      parent: _controller, curve: Interval(0.6, 1.0))),
+                ),
               ),
             ),
           ),
