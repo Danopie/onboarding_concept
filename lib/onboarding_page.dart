@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:onboardingconcept/constants.dart';
+import 'package:onboardingconcept/login_page.dart';
 
 class OnBoardingPage extends StatefulWidget {
   @override
@@ -158,7 +159,7 @@ class _OnBoardingPageState extends State<OnBoardingPage> {
                       }
                     },
                     onFinish: () {
-                      //TODO Push login
+                      LoginPage.show(context: context);
                     },
                     isFinished: () {
                       return item == items.last;
@@ -664,8 +665,8 @@ class _NextButtonState extends State<NextButton>
   @override
   Widget build(BuildContext context) {
     final initialSize = 68.0;
-    final circleSizeTween =
-        Tween<double>(begin: initialSize, end: MediaQuery.of(context).size.height * 2);
+    final circleSizeTween = Tween<double>(
+        begin: initialSize, end: MediaQuery.of(context).size.height * 2);
 
     final iconSizeTween = Tween<double>(begin: 24, end: 32);
     final iconOpacityTween = Tween<double>(begin: 1.0, end: 0.0);
@@ -817,6 +818,7 @@ class Header extends StatelessWidget {
       children: <Widget>[
         Logo(
           colorMask: Colors.white,
+          size: 36,
         ),
         SkipButton()
       ],
@@ -826,14 +828,15 @@ class Header extends StatelessWidget {
 
 class Logo extends StatelessWidget {
   final Color colorMask;
+  final double size;
 
-  const Logo({Key key, this.colorMask}) : super(key: key);
+  const Logo({Key key, this.colorMask, this.size}) : super(key: key);
   @override
   Widget build(BuildContext context) {
     return Container(
       child: Image.network(
         "https://image.flaticon.com/icons/png/512/1076/1076990.png",
-        height: 36,
+        height: size,
         color: colorMask,
       ),
     );
